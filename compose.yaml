@@ -1,0 +1,54 @@
+services:
+  backend:
+    build:
+      context: server
+    command: npm run dev
+    environment:
+      DATABASE_USER: postgres
+      DATABASE_PASSWORD: secret
+      DATABASE_HOST: db
+      DATABASE_DB: alldogs
+      NODE_ENV: development
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./server/src/:/code/src/
+      - ./server/package.json:/code/package.json
+      - ./server/package-lock.json:/code/package-lock.json
+      - ./server/tsconfig.json:/code/tsconfig.json
+    depends_on:
+      - db
+  frontend:
+    build:
+      context: client
+    command: npm run dev
+    volumes:
+      - ./client/public/:/code/public/
+      - ./client/src/:/code/src/
+      - ./client/package.json:/code/package.json
+      - ./client/package-lock.json:/code/package-lock.json
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+  db:
+    image: postgres
+    restart: always
+    shm_size: 128mb
+    environment:
+      POSTGRES_PASSWORD: secret
+      POSTGRES_DB: alldogs
+      POSTGRES_USER: root
+    ports:
+      - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - "80:80"
+
+volumes:
+  db-data: {}
